@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { connectDb } from "./config/db.js";
 import Product from "./models/Product.js";
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -12,28 +13,21 @@ const app = express();
 // });
 app.use(express.json());
 
-app.get("/api/products" ,async (req,res) => {
-    try {
-        const products = await Product.find({})
-        res.status(200).json({
-            success:true,
-            data:products
-            
-        })
-
-        
-    } catch (error) {
-        console.log("error in fetching products ",error.message)
-        res.status(500).json({
-            success:false,
-            message:"server error"
-
-
-        })
-        
-    }
-
-})
+app.get("/api/products", async (req, res) => {
+  try {
+    const products = await Product.find({});
+    res.status(200).json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    console.log("error in fetching products ", error.message);
+    res.status(500).json({
+      success: false,
+      message: "server error",
+    });
+  }
+});
 
 app.post("/api/products", async (req, res) => {
   const product = req.body;
@@ -51,6 +45,31 @@ app.post("/api/products", async (req, res) => {
   } catch (error) {
     console.log("error creating the  product", error);
     res.status(500).json({ success: false, message: "Error creating product" });
+  }
+});
+app.put("/api/products/:id", async (req, res) => {
+  const { id } = req.params;
+  const product = req.body;
+
+  // capture the 404 error
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({
+      success: false,
+      message: "product not found",
+    });
+  }
+
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(id, product, {
+      new: true,
+    });
+    res.status(200).json({
+      success: true,
+      data: updatedProduct,
+    });
+  } catch (error) {
+    console.log("error updating the  product", error);
+    res.status(500).json({ success: false, message: "Error updating product" });
   }
 });
 
